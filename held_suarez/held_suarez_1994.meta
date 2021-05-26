@@ -24,17 +24,31 @@
   dimensions = ()
   intent = in
 [ psurf_ref_in ]
-  standard_name = us_standard_atmospheric_pressure_at_sea_level
+  standard_name = reference_pressure_at_surface
   units = Pa
   type = real | kind = kind_phys
   dimensions = ()
   intent = in
 [ pref_mid_norm_in ]
-  standard_name = reference_pressure
+  standard_name = reference_pressure_normalized_by_surface_pressure
   units = Pa
   type = real | kind = kind_phys
   dimensions = (vertical_layer_dimension)
   intent = in
+[ errmsg ]
+  standard_name = ccpp_error_message
+  long_name = Error message for error handling in CCPP
+  units = 1
+  type = character | kind = len=512
+  dimensions = ()
+  intent = out
+[ errflg ]
+  standard_name = ccpp_error_flag
+  long_name = Error flag for error handling in CCPP
+  units = flag
+  type = integer
+  dimensions = ()
+  intent = out
 
 [ccpp-arg-table]
   name  = held_suarez_1994_run
@@ -98,4 +112,18 @@
   units = K s-1
   type = real | kind = kind_phys
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  intent = out
+[ errmsg ]
+  standard_name = ccpp_error_message
+  long_name = Error message for error handling in CCPP
+  units = 1
+  type = character | kind = len=512
+  dimensions = ()
+  intent = out
+[ errflg ]
+  standard_name = ccpp_error_flag
+  long_name = Error flag for error handling in CCPP
+  units = flag
+  type = integer
+  dimensions = ()
   intent = out

@@ -52,15 +52,20 @@ contains
 
 !> \section arg_table_held_suarez_1994_init Argument Table
 !! \htmlinclude held_suarez_1994_init.html
-  subroutine held_suarez_1994_init(pver_in, cappa_in, cpair_in, psurf_ref_in, pref_mid_norm_in)
+  subroutine held_suarez_1994_init(pver_in, cappa_in, cpair_in, psurf_ref_in, pref_mid_norm_in, errmsg, errflg)
     !! Dummy arguments
-    integer,         intent(in) :: pver_in
-    real(kind_phys), intent(in) :: cappa_in
-    real(kind_phys), intent(in) :: cpair_in
-    real(kind_phys), intent(in) :: psurf_ref_in
-    real(kind_phys), intent(in) :: pref_mid_norm_in(:)
+    integer,           intent(in) :: pver_in
+    real(kind_phys),   intent(in) :: cappa_in
+    real(kind_phys),   intent(in) :: cpair_in
+    real(kind_phys),   intent(in) :: psurf_ref_in
+    real(kind_phys),   intent(in) :: pref_mid_norm_in(:)
+    character(len=512),intent(out):: errmsg
+    integer,           intent(out):: errflg
 
     integer               :: pver                     ! Num vertical levels
+
+    errmsg = ' '
+    errflg = 0
 
     pver = pver_in
     allocate(pref_mid_norm(pver))
@@ -74,7 +79,7 @@ contains
 !> \section arg_table_held_suarez_1994_run Argument Table
 !! \htmlinclude held_suarez_1994_run.html
   subroutine held_suarez_1994_run(pver, ncol, clat, pmid, &
-       u, v, t, du, dv, s)
+       u, v, t, du, dv, s, errmsg, errflg)
 
     !
     ! Input arguments
@@ -89,9 +94,11 @@ contains
     !
     ! Output arguments
     !
-    real(kind_phys), intent(out) :: du(:,:)   ! Zonal wind tend
-    real(kind_phys), intent(out) :: dv(:,:)   ! Meridional wind tend
-    real(kind_phys), intent(out) :: s(:,:)    ! Heating rate
+    real(kind_phys),   intent(out) :: du(:,:)   ! Zonal wind tend
+    real(kind_phys),   intent(out) :: dv(:,:)   ! Meridional wind tend
+    real(kind_phys),   intent(out) :: s(:,:)    ! Heating rate
+    character(len=512),intent(out):: errmsg
+    integer,           intent(out):: errflg
     !
     !---------------------------Local workspace-----------------------------
     !
@@ -108,6 +115,9 @@ contains
     !
     !-----------------------------------------------------------------------
     !
+
+    errmsg = ' '
+    errflg = 0
 
     do i = 1, ncol
       coslat (i) = cos(clat(i))
