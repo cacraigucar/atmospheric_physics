@@ -1,15 +1,6 @@
 module zm_conv_momtran_mod
 
   use ccpp_kinds, only:  kind_phys
-  use spmd_utils,      only: masterproc
-  use ppgrid,          only: pcols, pver, pverp
-  use cloud_fraction,  only: cldfrc_fice
-  use physconst,       only: cpair, epsilo, gravit, latice, latvap, tmelt, rair, &
-                             cpwv, cpliq, rh2o
-  use cam_abortutils,  only: endrun
-  use cam_logfile,     only: iulog
-  use zm_microphysics, only: zm_mphy, zm_aero_t, zm_conv_t
-  use cam_history,     only: outfld
   use zm_conv_common,  only: momcu, momcd
 
   implicit none
@@ -25,7 +16,7 @@ contains
 !> \section arg_table_zm_conv_momtran_run Argument Table
 !! \htmlinclude zm_conv_momtran_run.html
 !!
-subroutine zm_conv_momtran_run(lchnk, ncol, &
+subroutine zm_conv_momtran_run(lchnk, ncol, pcols, pver, pverp, &
                     domomtran,q       ,ncnst   ,mu      ,md    , &
                     du      ,eu      ,ed      ,dp      ,dsubcld , &
                     jt      ,mx      ,ideep   ,il1g    ,il2g    , &
@@ -45,7 +36,6 @@ subroutine zm_conv_momtran_run(lchnk, ncol, &
 !
 !-----------------------------------------------------------------------
    use constituents,    only: cnst_get_type_byind
-   use ppgrid
 
    implicit none
 !-----------------------------------------------------------------------
@@ -55,6 +45,7 @@ subroutine zm_conv_momtran_run(lchnk, ncol, &
    integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: ncnst                 ! number of tracers to transport
+   integer, intent(in) :: pcols, pver, pverp
    logical, intent(in) :: domomtran(:)      ! flag for doing convective transport    (ncnst)
    real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array                                    (pcols,pver,ncnst)
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up                              (pcols,pver)

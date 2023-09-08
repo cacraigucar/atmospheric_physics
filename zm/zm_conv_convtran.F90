@@ -2,16 +2,6 @@ module zm_conv_convtran_mod
 
   use ccpp_kinds, only:  kind_phys
 
-  use spmd_utils,      only: masterproc
-  use ppgrid,          only: pcols, pver, pverp
-  use cloud_fraction,  only: cldfrc_fice
-  use physconst,       only: cpair, epsilo, gravit, latice, latvap, tmelt, rair, &
-                             cpwv, cpliq, rh2o
-  use cam_abortutils,  only: endrun
-  use cam_logfile,     only: iulog
-  use zm_microphysics, only: zm_mphy, zm_aero_t, zm_conv_t
-  use cam_history,     only: outfld
-
   use zm_conv_common,  only: zmconv_microp
   implicit none
 
@@ -29,11 +19,11 @@ contains
 !> \section arg_table_zm_conv_convtran_run Argument Table
 !! \htmlinclude zm_conv_convtran_run.html
 !!
-subroutine zm_conv_convtran_run(lchnk   , &
+subroutine zm_conv_convtran_run(lchnk   , pcols, pver, &
                     doconvtran,q       ,ncnst   ,mu      ,md      , &
                     du      ,eu      ,ed      ,dp      ,dsubcld , &
                     jt      ,mx      ,ideep   ,il1g    ,il2g    , &
-                    nstep   ,fracis  ,dqdt    ,dpdry   ,dt)
+                    nstep   ,fracis  ,dqdt    ,dpdry   ,dt      )
 !-----------------------------------------------------------------------
 !
 ! Purpose:
@@ -49,7 +39,6 @@ subroutine zm_conv_convtran_run(lchnk   , &
 !
 !-----------------------------------------------------------------------
    use constituents,    only: cnst_get_type_byind
-   use ppgrid
 
    implicit none
 !-----------------------------------------------------------------------
@@ -57,6 +46,8 @@ subroutine zm_conv_convtran_run(lchnk   , &
 ! Input arguments
 !
    integer, intent(in) :: lchnk          ! chunk identifier
+   integer, intent(in) :: pcols
+   integer, intent(in) :: pver
    integer, intent(in) :: ncnst          ! number of tracers to transport
    logical, intent(in) :: doconvtran(:)  ! flag for doing convective transport      (ncnst)
    real(kind_phys), intent(in) :: q(:,:,:)      ! Tracer array including moisture          (pcols,pver,ncnst)
@@ -79,6 +70,7 @@ subroutine zm_conv_convtran_run(lchnk   , &
    real(kind_phys), intent(in) :: dpdry(:,:)    ! Delta pressure between interfaces        (pcols,pver)
 
    real(kind_phys), intent(in) :: dt                      ! 2 delta t (model time increment)
+
 
 ! input/output
 

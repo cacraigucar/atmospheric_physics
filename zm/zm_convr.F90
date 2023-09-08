@@ -1,15 +1,9 @@
 module zm_convr_mod
 
   use ccpp_kinds, only:  kind_phys
-  use spmd_utils,      only: masterproc
-  use ppgrid,          only: pcols, pver, pverp
-  use cloud_fraction,  only: cldfrc_fice
-  use physconst,       only: cpair, epsilo, gravit, latice, latvap, tmelt, rair, &
-                             cpwv, cpliq, rh2o
-  use cam_abortutils,  only: endrun
-  use cam_logfile,     only: iulog
+!  use spmd_utils,      only: masterproc
+!  use cam_logfile,     only: iulog
   use zm_microphysics, only: zm_mphy, zm_aero_t, zm_conv_t
-  use cam_history,     only: outfld
   use zm_conv_common,  only: rl, cpres, capelmt, c0_lnd, c0_ocn, num_cin, zm_org, tau, tfreez, eps1, zmconv_microp, no_deep_pbl
   use zm_conv_common,  only: ke, ke_lnd, momcu, momcd
   use zm_conv_common,  only: rgrav, rgas, grav, cp, limcnv, lparcel_pbl, tiedke_add, dmpdz_param
@@ -34,11 +28,18 @@ contains
 !> \section arg_table_zm_convr_init Argument Table
 !! \htmlinclude zm_convr_init.html
 !!
-subroutine zm_convr_init(limcnv_in, zmconv_c0_lnd, zmconv_c0_ocn, zmconv_ke, zmconv_ke_lnd, &
+subroutine zm_convr_init(cpair, epsilo, gravit, latvap, tmelt, rair, &
+                    limcnv_in, zmconv_c0_lnd, zmconv_c0_ocn, zmconv_ke, zmconv_ke_lnd, &
                     zmconv_momcu, zmconv_momcd, zmconv_num_cin, zmconv_org, &
                     zmconv_microp_in, no_deep_pbl_in, zmconv_tiedke_add, &
-                    zmconv_capelmt, zmconv_dmpdz, zmconv_parcel_pbl, zmconv_tau)
+                    zmconv_capelmt, zmconv_dmpdz, zmconv_parcel_pbl, zmconv_tau, errmsg, errflg)
 
+   real(kind_phys), intent(in)   :: cpair           ! specific heat of dry air (J K-1 kg-1)
+   real(kind_phys), intent(in)   :: epsilo          ! ratio of h2o to dry air molecular weights
+   real(kind_phys), intent(in)   :: gravit          ! gravitational acceleration (m s-2)
+   real(kind_phys), intent(in)   :: latvap          ! Latent heat of vaporization (J kg-1)
+   real(kind_phys), intent(in)   :: tmelt           ! Freezing point of water (K)
+   real(kind_phys), intent(in)   :: rair            ! Dry air gas constant     (J K-1 kg-1)
    integer, intent(in)           :: limcnv_in       ! top interface level limit for convection
    integer, intent(in)           :: zmconv_num_cin  ! Number negative buoyancy regions that are allowed
                                                     ! before the convection top and CAPE calculations are completed.
@@ -56,6 +57,11 @@ subroutine zm_convr_init(limcnv_in, zmconv_c0_lnd, zmconv_c0_ocn, zmconv_ke, zmc
    real(kind_phys),intent(in)           :: zmconv_dmpdz
    logical, intent(in)           :: zmconv_parcel_pbl ! Should the parcel properties include PBL mixing?
    real(kind_phys),intent(in)           :: zmconv_tau
+   character(len=512), intent(out)      :: errmsg
+   integer, intent(out)                 :: errflg
+
+   errmsg =''
+   errflg = 0
 
    ! Initialization of ZM constants
    limcnv = limcnv_in
@@ -87,19 +93,20 @@ subroutine zm_convr_init(limcnv_in, zmconv_c0_lnd, zmconv_c0_ocn, zmconv_ke, zmc
 
    tau = zmconv_tau
 
-   if ( masterproc ) then
-      write(iulog,*) 'tuning parameters zm_convr_init: tau',tau
-      write(iulog,*) 'tuning parameters zm_convr_init: c0_lnd',c0_lnd, ', c0_ocn', c0_ocn
-      write(iulog,*) 'tuning parameters zm_convr_init: num_cin', num_cin
-      write(iulog,*) 'tuning parameters zm_convr_init: ke',ke
-      write(iulog,*) 'tuning parameters zm_convr_init: no_deep_pbl',no_deep_pbl
-      write(iulog,*) 'tuning parameters zm_convr_init: zm_capelmt', capelmt
-      write(iulog,*) 'tuning parameters zm_convr_init: zm_dmpdz', dmpdz_param
-      write(iulog,*) 'tuning parameters zm_convr_init: zm_tiedke_add', tiedke_add
-      write(iulog,*) 'tuning parameters zm_convr_init: zm_parcel_pbl', lparcel_pbl
-   endif
-
-   if (masterproc) write(iulog,*)'**** ZM: DILUTE Buoyancy Calculation ****'
+!CACNOTE - How handle writes like this?
+!   if ( masterproc ) then
+!      write(iulog,*) 'tuning parameters zm_convr_init: tau',tau
+!      write(iulog,*) 'tuning parameters zm_convr_init: c0_lnd',c0_lnd, ', c0_ocn', c0_ocn
+!      write(iulog,*) 'tuning parameters zm_convr_init: num_cin', num_cin
+!      write(iulog,*) 'tuning parameters zm_convr_init: ke',ke
+!      write(iulog,*) 'tuning parameters zm_convr_init: no_deep_pbl',no_deep_pbl
+!      write(iulog,*) 'tuning parameters zm_convr_init: zm_capelmt', capelmt
+!      write(iulog,*) 'tuning parameters zm_convr_init: zm_dmpdz', dmpdz_param
+!      write(iulog,*) 'tuning parameters zm_convr_init: zm_tiedke_add', tiedke_add
+!      write(iulog,*) 'tuning parameters zm_convr_init: zm_parcel_pbl', lparcel_pbl
+!   endif
+!
+!   if (masterproc) write(iulog,*)'**** ZM: DILUTE Buoyancy Calculation ****'
 
 end subroutine zm_convr_init
 
@@ -108,7 +115,9 @@ end subroutine zm_convr_init
 !> \section arg_table_zm_convr_run Argument Table
 !! \htmlinclude zm_convr_run.html
 !!
-subroutine zm_convr_run(lchnk   ,ncol    , &
+subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
+                    pverp,   gravit  ,latice  ,cpwv    ,cpliq   , &
+                    rh2o                                        , &
                     t       ,qh      ,prec    ,jctop   ,jcbot   , &
                     pblh    ,zm      ,geos    ,zi      ,qtnd    , &
                     heat    ,pap     ,paph    ,dpp     , &
@@ -119,7 +128,7 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
                     ql      ,rliq    ,landfrac,                   &
                     org     ,orgt    ,org2d   ,  &
                     dif     ,dnlf    ,dnif    ,conv    , &
-                    aero    , rice)
+                    aero    , rice   ,errmsg  ,errflg)
 !-----------------------------------------------------------------------
 !
 ! Purpose:
@@ -239,6 +248,13 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
 !
    integer, intent(in) :: lchnk                   ! chunk identifier
    integer, intent(in) :: ncol                    ! number of atmospheric columns
+   integer, intent(in) :: pcols, pver, pverp
+
+   real(kind_phys), intent(in) :: gravit          ! gravitational acceleration (m s-2)
+   real(kind_phys), intent(in) :: latice          ! Latent heat of fusion (J kg-1)
+   real(kind_phys), intent(in) :: cpwv            ! specific heat of water vapor (J K-1 kg-1)
+   real(kind_phys), intent(in) :: cpliq           ! specific heat of fresh h2o (J K-1 kg-1)
+   real(kind_phys), intent(in) :: rh2o            ! Water vapor gas constant (J K-1 kg-1)
 
    real(kind_phys), intent(in) :: t(:,:)          ! grid slice of temperature at mid-layer.           (pcols,pver)
    real(kind_phys), intent(in) :: qh(:,:)         ! grid slice of specific humidity.                  (pcols,pver)
@@ -288,6 +304,8 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
    real(kind_phys), intent(out) :: rice(:) ! reserved ice (not yet in cldce) for energy integrals             (pcols)
 
    integer,  intent(out) :: ideep(:)  ! column indices of gathered points                              (pcols)
+   character(len=512), intent(out)      :: errmsg
+   integer, intent(out)                 :: errflg
 
    type(zm_conv_t) :: loc_conv
 
@@ -415,6 +433,8 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
 !
 !--------------------------Data statements------------------------------
 
+   errmsg = ''
+   errflg = 0
 !
 ! Set internal variable "msg" (convection limit) to "limcnv-1"
 !
@@ -739,7 +759,7 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
 
       !  For cam3 physics package, call non-dilute
 
-      call buoyan(lchnk   ,ncol    , &
+      call buoyan(lchnk   ,ncol    , pcols  ,pver    , &
                   q       ,t       ,p       ,z       ,pf       , &
                   tp      ,qstp    ,tl      ,rl      ,cape     , &
                   pblt    ,lcl     ,lel     ,lon     ,maxi     , &
@@ -750,12 +770,14 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
       !  Evaluate Tparcel, qs(Tparcel), buoyancy and CAPE,
       !     lcl, lel, parcel launch level at index maxi()=hmax
 
-      call buoyan_dilute(lchnk   ,ncol    , &
+      call buoyan_dilute(lchnk     ,ncol    ,pcols   ,pver     , &
+                  cpliq   ,latice  ,cpwv    ,rh2o    ,&
                   q       ,t       ,p       ,z       ,pf       , &
                   tp      ,qstp    ,tl      ,rl      ,cape     , &
                   pblt    ,lcl     ,lel     ,lon     ,maxi     , &
                   rgas    ,grav    ,cpres   ,msg     , &
-                  zi      ,zs      ,tpert   , org2d  , landfrac)
+                  zi      ,zs      ,tpert   , org2d  , landfrac,&
+                  errmsg  ,errflg)
    end if
 
 !
@@ -882,7 +904,8 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
 ! obtain cloud properties.
 !
 
-   call cldprp(lchnk   , &
+   call cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq  , &
+               latice  ,cpwv    ,rh2o    ,&
                qg      ,tg      ,ug      ,vg      ,pg      , &
                zg      ,sg      ,mu      ,eu      ,du      , &
                md      ,ed      ,sd      ,qd      ,mc      , &
@@ -925,7 +948,7 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
       end do
    end if
 
-   call closure(lchnk   , &
+   call closure(lchnk   ,pcols   ,pver    , &
                 qg      ,tg      ,pg      ,zg      ,sg      , &
                 tpg     ,qs      ,qu      ,su      ,mc      , &
                 du      ,mu      ,md      ,qd      ,sd      , &
@@ -1040,7 +1063,7 @@ subroutine zm_convr_run(lchnk   ,ncol    , &
 !
 ! compute temperature and moisture changes due to convection.
 !
-   call q1q2_pjr(lchnk   , &
+   call q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  , &
                  dqdt    ,dsdt    ,qg      ,qs      ,qu      , &
                  su      ,du      ,qhat    ,shat    ,dp      , &
                  mu      ,md      ,sd      ,qd      ,qldeg   , &
@@ -1368,7 +1391,7 @@ end subroutine zm_convr_finalize
 
 !=========================================================================================
 
-subroutine buoyan(lchnk   ,ncol    , &
+subroutine buoyan(lchnk   ,ncol    ,pcols   ,pver    , &
                   q       ,t       ,p       ,z       ,pf      , &
                   tp      ,qstp    ,tl      ,rl      ,cape    , &
                   pblt    ,lcl     ,lel     ,lon     ,mx      , &
@@ -1396,6 +1419,8 @@ subroutine buoyan(lchnk   ,ncol    , &
 !
    integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: ncol                  ! number of atmospheric columns
+   integer, intent(in) :: pcols
+   integer, intent(in) :: pver
 
    real(kind_phys), intent(in) :: q(pcols,pver)        ! spec. humidity
    real(kind_phys), intent(in) :: t(pcols,pver)        ! temperature
@@ -1653,12 +1678,14 @@ subroutine buoyan(lchnk   ,ncol    , &
    return
 end subroutine buoyan
 
-subroutine buoyan_dilute(lchnk   ,ncol    , &
+subroutine buoyan_dilute(  lchnk   ,ncol    ,pcols   ,pver    , &
+                  cpliq   ,latice  ,cpwv    ,rh2o    ,&
                   q       ,t       ,p       ,z       ,pf      , &
                   tp      ,qstp    ,tl      ,rl      ,cape    , &
                   pblt    ,lcl     ,lel     ,lon     ,mx      , &
                   rd      ,grav    ,cp      ,msg     , &
-                  zi      ,zs      ,tpert    ,org    , landfrac)
+                  zi      ,zs      ,tpert    ,org    , landfrac,&
+                  errmsg  ,errflg)
 !-----------------------------------------------------------------------
 !
 ! Purpose:
@@ -1691,6 +1718,12 @@ subroutine buoyan_dilute(lchnk   ,ncol    , &
 !
    integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: ncol                  ! number of atmospheric columns
+   integer, intent(in) :: pcols
+   integer, intent(in) :: pver
+   real(kind_phys), intent(in) :: cpliq
+   real(kind_phys), intent(in) :: latice
+   real(kind_phys), intent(in) :: cpwv
+   real(kind_phys), intent(in) :: rh2o
 
    real(kind_phys), intent(in) :: q(pcols,pver)        ! spec. humidity
    real(kind_phys), intent(in) :: t(pcols,pver)        ! temperature
@@ -1718,6 +1751,9 @@ subroutine buoyan_dilute(lchnk   ,ncol    , &
 
    real(kind_phys), pointer :: org(:,:)      ! organization parameter
    real(kind_phys), intent(in) :: landfrac(pcols)
+   character(len=512), intent(out)      :: errmsg
+   integer, intent(out)                 :: errflg
+
 !
 !--------------------------Local Variables------------------------------
 !
@@ -1922,9 +1958,9 @@ end if ! Mixed parcel properties
 !!! DILUTE PLUME CALCULATION USING ENTRAINING PLUME !!!
 !!!   RBN 9/9/04   !!!
 
-   call parcel_dilute(lchnk, ncol, msg, mx, p, t, q, &
+   call parcel_dilute(lchnk, ncol, pcols, pver, cpliq, cpwv, rh2o, latice, msg, mx, p, t, q, &
    tpert, tp, tpv, qstp, pl, tl, ql, lcl, &
-   org, landfrac)
+   org, landfrac, errmsg, errflg)
 
 
 ! If lcl is above the nominal level of non-divergence (600 mbs),
@@ -2005,9 +2041,9 @@ end if ! Mixed parcel properties
    return
 end subroutine buoyan_dilute
 
-subroutine parcel_dilute (lchnk, ncol, msg, klaunch, p, t, q, &
+subroutine parcel_dilute (lchnk, ncol, pcols, pver, cpliq, cpwv, rh2o, latice, msg, klaunch, p, t, q, &
   tpert, tp, tpv, qstp, pl, tl, ql, lcl, &
-  org, landfrac)
+  org, landfrac,errmsg,errflg)
 
 ! Routine  to determine
 !   1. Tp   - Parcel temperature
@@ -2019,6 +2055,12 @@ implicit none
 
 integer, intent(in) :: lchnk
 integer, intent(in) :: ncol
+integer, intent(in) :: pcols
+integer, intent(in) :: pver
+real(kind_phys), intent(in) :: cpliq
+real(kind_phys), intent(in) :: cpwv
+real(kind_phys), intent(in) :: rh2o
+real(kind_phys), intent(in) :: latice
 integer, intent(in) :: msg
 
 integer, intent(in), dimension(pcols) :: klaunch(pcols)
@@ -2037,6 +2079,10 @@ real(kind_phys), intent(inout), dimension(pcols) :: pl          ! Actual pressur
 integer, intent(inout), dimension(pcols) :: lcl ! Lifting condesation level (first model level with saturation).
 
 real(kind_phys), intent(out), dimension(pcols,pver) :: tpv   ! Define tpv within this routine.
+character(len=512), intent(out)      :: errmsg
+integer, intent(out)                 :: errflg
+
+
 
 real(kind_phys), pointer, dimension(:,:) :: org
 real(kind_phys), intent(in), dimension(pcols) :: landfrac
@@ -2146,12 +2192,12 @@ do k = pver, msg+1, -1
          if (lparcel_pbl) then ! Modifcations to parcel properties if lparcel_pbl set.
 
             qtp0(i) = ql(i)     ! Parcel launch q (PBL mixed value).
-            sp0(i)  = entropy(tl(i),pl(i),qtp0(i)) ! Parcel launch entropy could be a mixed parcel.
+            sp0(i)  = entropy(tl(i),pl(i),qtp0(i),cpliq,cpwv,rh2o) ! Parcel launch entropy could be a mixed parcel.
 
          else
 
             qtp0(i) = q(i,k)    ! Parcel launch total water (assuming subsaturated)
-            sp0(i)  = entropy(t(i,k),p(i,k),qtp0(i)) ! Parcel launch entropy.
+            sp0(i)  = entropy(t(i,k),p(i,k),qtp0(i),cpliq,cpwv,rh2o) ! Parcel launch entropy.
 
          end if
 
@@ -2160,7 +2206,7 @@ do k = pver, msg+1, -1
          qtmix(i,k) = qtp0(i)
          tfguess = t(i,k)
          rcall = 1
-         call ientropy (rcall,i,lchnk,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         call ientropy (rcall,i,lchnk,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
       end if
 
 ! Entraining levels
@@ -2174,7 +2220,7 @@ do k = pver, msg+1, -1
          tenv  = 0.5_kind_phys*(t(i,k)+t(i,k+1))
          penv  = 0.5_kind_phys*(p(i,k)+p(i,k+1))
 
-         senv  = entropy(tenv,penv,qtenv)  ! Entropy of environment.
+         senv  = entropy(tenv,penv,qtenv,cpliq,cpwv,rh2o)  ! Entropy of environment.
 
 ! Determine fractional entrainment rate /pa given value /m.
 
@@ -2205,7 +2251,7 @@ do k = pver, msg+1, -1
 
          tfguess = tmix(i,k+1)
          rcall = 2
-         call ientropy(rcall,i,lchnk,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         call ientropy(rcall,i,lchnk,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
 
 !
 ! Determine if this is lcl of this column if qsmix <= qtmix.
@@ -2224,7 +2270,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
             rcall = 3
-            call ientropy (rcall,i,lchnk,slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
+            call ientropy (rcall,i,lchnk,slcl,pl(i),qtlcl,tl(i),qslcl,tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
 
 !            write(iulog,*)' '
 !            write(iulog,*)' p',p(i,k+1),pl(i),p(i,lcl(i))
@@ -2324,7 +2370,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
             rcall =4
-            call ientropy (rcall,i,lchnk,new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess)
+            call ientropy (rcall,i,lchnk,new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
 
          end do  ! Iteration loop for freezing processes.
 
@@ -2358,13 +2404,17 @@ return
 end subroutine parcel_dilute
 
 !-----------------------------------------------------------------------------------------
-real(kind_phys) function entropy(TK,p,qtot)
+real(kind_phys) function entropy(TK,p,qtot,cpliq,cpwv,rh2o)
 !-----------------------------------------------------------------------------------------
 !
 ! TK(K),p(mb),qtot(kg/kg)
 ! from Raymond and Blyth 1992
 !
      real(kind_phys), intent(in) :: p,qtot,TK
+     real(kind_phys), intent(in) :: cpliq
+     real(kind_phys), intent(in) :: cpwv
+     real(kind_phys), intent(in) :: rh2o
+
      real(kind_phys) :: qv,qst,e,est,L
      real(kind_phys), parameter :: pref = 1000._kind_phys
 
@@ -2382,7 +2432,7 @@ end FUNCTION entropy
 
 !
 !-----------------------------------------------------------------------------------------
-SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
+SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg,cpliq,cpwv,rh2o,errmsg,errflg)
 !-----------------------------------------------------------------------------------------
 !
 ! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg).
@@ -2394,7 +2444,13 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
 
   integer, intent(in) :: icol, lchnk, rcall
   real(kind_phys), intent(in)  :: s, p, Tfg, qt
+  real(kind_phys), intent(in) :: cpliq
+  real(kind_phys), intent(in) :: cpwv
+  real(kind_phys), intent(in) :: rh2o
   real(kind_phys), intent(out) :: qst, T
+  character(len=512), intent(out)      :: errmsg
+  integer, intent(out)                 :: errflg
+
   real(kind_phys) :: est, this_lat,this_lon
   real(kind_phys) :: a,b,c,d,ebr,fa,fb,fc,pbr,qbr,rbr,sbr,tol1,xm,tol
   integer :: i
@@ -2415,8 +2471,8 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
   a = Tfg-10    !low bracket
   b = Tfg+10    !high bracket
 
-  fa = entropy(a, p, qt) - s
-  fb = entropy(b, p, qt) - s
+  fa = entropy(a, p, qt,cpliq,cpwv,rh2o) - s
+  fb = entropy(b, p, qt,cpliq,cpwv,rh2o) - s
 
   c=b
   fc=fb
@@ -2472,7 +2528,7 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
      fa=fb
      b=b+merge(d,sign(tol1,xm), abs(d) > tol1 )
 
-     fb = entropy(b, p, qt) - s
+     fb = entropy(b, p, qt,cpliq,cpwv,rh2o) - s
 
   end do converge
 
@@ -2482,19 +2538,19 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
   if (.not. converged) then
      this_lat = get_rlat_p(lchnk, icol)*57.296_kind_phys
      this_lon = get_rlon_p(lchnk, icol)*57.296_kind_phys
-     write(iulog,*) '*** ZM_CONV: IENTROPY: Failed and about to exit, info follows ****'
-     write(iulog,100) 'ZM_CONV: IENTROPY. Details: call#,lchnk,icol= ',rcall,lchnk,icol, &
+     write(errmsg,100) 'ZM_CONV: IENTROPY. Details: call#,lchnk,icol= ',rcall,lchnk,icol, &
           ' lat: ',this_lat,' lon: ',this_lon, &
           ' P(mb)= ', p, ' Tfg(K)= ', Tfg, ' qt(g/kg) = ', 1000._kind_phys*qt, &
           ' qst(g/kg) = ', 1000._kind_phys*qst,', s(J/kg) = ',s
-     call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
+     errflg=1
   end if
 
 100 format (A,I1,I4,I4,7(A,F6.2))
 
 end SUBROUTINE ientropy
 
-subroutine cldprp(lchnk   , &
+subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
+                  latice  ,cpwv    ,rh2o    ,&
                   q       ,t       ,u       ,v       ,p       , &
                   z       ,s       ,mu      ,eu      ,du      , &
                   md      ,ed      ,sd      ,qd      ,mc      , &
@@ -2534,6 +2590,14 @@ subroutine cldprp(lchnk   , &
 ! Input arguments
 !
    integer, intent(in) :: lchnk                  ! chunk identifier
+   integer, intent(in) :: pcols
+   integer, intent(in) :: pver
+   integer, intent(in) :: pverp
+
+   real(kind_phys), intent(in) :: cpliq
+   real(kind_phys), intent(in) :: latice
+   real(kind_phys), intent(in) :: cpwv
+   real(kind_phys), intent(in) :: rh2o
 
    real(kind_phys), intent(in) :: q(pcols,pver)         ! spec. humidity of env
    real(kind_phys), intent(in) :: t(pcols,pver)         ! temp of env
@@ -3414,7 +3478,7 @@ subroutine cldprp(lchnk   , &
    return
 end subroutine cldprp
 
-subroutine closure(lchnk   , &
+subroutine closure(lchnk   ,pcols   ,pver, &
                    q       ,t       ,p       ,z       ,s       , &
                    tp      ,qs      ,qu      ,su      ,mc      , &
                    du      ,mu      ,md      ,qd      ,sd      , &
@@ -3446,6 +3510,8 @@ subroutine closure(lchnk   , &
 !-----------------------------Arguments---------------------------------
 !
    integer, intent(in) :: lchnk                 ! chunk identifier
+   integer, intent(in) :: pcols
+   integer, intent(in) :: pver
 
    real(kind_phys), intent(inout) :: q(pcols,pver)        ! spec humidity
    real(kind_phys), intent(inout) :: t(pcols,pver)        ! temperature
@@ -3626,7 +3692,7 @@ subroutine closure(lchnk   , &
    return
 end subroutine closure
 
-subroutine q1q2_pjr(lchnk   , &
+subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
                     dqdt    ,dsdt    ,q       ,qs      ,qu      , &
                     su      ,du      ,qhat    ,shat    ,dp      , &
                     mu      ,md      ,sd      ,qd      ,ql      , &
@@ -3655,6 +3721,9 @@ subroutine q1q2_pjr(lchnk   , &
    real(kind_phys), intent(in) :: cp
 
    integer, intent(in) :: lchnk             ! chunk identifier
+   integer, intent(in) :: pcols
+   integer, intent(in) :: pver
+   real(kind_phys), intent(in) :: latice
    integer, intent(in) :: il1g
    integer, intent(in) :: il2g
    integer, intent(in) :: msg

@@ -2,15 +2,9 @@ module zm_conv_evap_mod
 
   use ccpp_kinds, only:  kind_phys
 
-  use spmd_utils,      only: masterproc
-  use ppgrid,          only: pcols, pver, pverp
+! CACNOTE - Need to ccpp'ize cloud_fraction
   use cloud_fraction,  only: cldfrc_fice
-  use physconst,       only: cpair, gravit, latice, latvap, tmelt, rair, &
-                             cpwv, cpliq, rh2o
-  use cam_abortutils,  only: endrun
-  use cam_logfile,     only: iulog
-  use zm_microphysics, only: zm_mphy, zm_aero_t, zm_conv_t
-  use cam_history,     only: outfld
+
   use zm_conv_common,  only: cpres, ke, ke_lnd, zm_org
 
   implicit none
@@ -29,7 +23,8 @@ contains
 !> \section arg_table_zm_conv_evap_run Argument Table
 !! \htmlinclude zm_conv_evap_run.html
 !!
-subroutine zm_conv_evap_run(ncol,lchnk, &
+subroutine zm_conv_evap_run(ncol,lchnk, pcols, pver, pverp, &
+     gravit, latice, latvap, tmelt, &
      t,pmid,pdel,q, &
      landfrac, &
      tend_s, tend_s_snwprd, tend_s_snwevmlt, tend_q, &
@@ -46,11 +41,16 @@ subroutine zm_conv_evap_run(ncol,lchnk, &
 ! Evaporate some of the precip directly into the environment using a Sundqvist type algorithm
 !-----------------------------------------------------------------------
 
+!CACNOTE - Not sure what to do about qsat_water
     use wv_saturation,  only: qsat
-    use phys_grid, only: get_rlat_all_p
 
 !------------------------------Arguments--------------------------------
     integer,intent(in) :: ncol, lchnk             ! number of columns and chunk index
+    integer,intent(in) :: pcols, pver, pverp
+    real(kind_phys),intent(in) :: gravit                     ! gravitational acceleration (m s-2)
+    real(kind_phys),intent(in) :: latice                     ! Latent heat of fusion (J kg-1)
+    real(kind_phys),intent(in) :: latvap                     ! Latent heat of vaporization (J kg-1)
+    real(kind_phys),intent(in) :: tmelt                      ! Freezing point of water (K)
     real(kind_phys),intent(in), dimension(:,:) :: t          ! temperature (K)                              (pcols,pver)
     real(kind_phys),intent(in), dimension(:,:) :: pmid       ! midpoint pressure (Pa)                       (pcols,pver)
     real(kind_phys),intent(in), dimension(:,:) :: pdel       ! layer thickness (Pa)                         (pcols,pver)
