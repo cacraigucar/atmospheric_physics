@@ -1,0 +1,479 @@
+[ccpp-table-properties]
+  name = zm_convr
+  type = scheme
+
+[ccpp-arg-table]
+  name  = zm_convr_init
+  type  = scheme
+[ cpair ]
+  standard_name = enter_standard_name_1
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ epsilo ]
+  standard_name = enter_standard_name_2
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ gravit ]
+  standard_name = enter_standard_name_3
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ latvap ]
+  standard_name = enter_standard_name_4
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ tmelt ]
+  standard_name = enter_standard_name_5
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ rair ]
+  standard_name = enter_standard_name_6
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ limcnv_in ]
+  standard_name = enter_standard_name_7
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = in
+[ zmconv_c0_lnd ]
+  standard_name = enter_standard_name_9
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_c0_ocn ]
+  standard_name = enter_standard_name_10
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_ke ]
+  standard_name = enter_standard_name_11
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_ke_lnd ]
+  standard_name = enter_standard_name_12
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_momcu ]
+  standard_name = enter_standard_name_13
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_momcd ]
+  standard_name = enter_standard_name_14
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_num_cin ]
+  standard_name = enter_standard_name_8
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = in
+[ zmconv_org ]
+  standard_name = enter_standard_name_15
+  units = enter_units
+  type = logical
+  dimensions = ()
+  intent = in
+[ zmconv_microp_in ]
+  standard_name = enter_standard_name_16
+  units = enter_units
+  type = logical
+  dimensions = ()
+  intent = in
+[ no_deep_pbl_in ]
+  standard_name = enter_standard_name_17
+  units = enter_units
+  type = logical
+  dimensions = ()
+  intent = in
+[ zmconv_tiedke_add ]
+  standard_name = enter_standard_name_18
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_capelmt ]
+  standard_name = enter_standard_name_19
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_dmpdz ]
+  standard_name = enter_standard_name_20
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ zmconv_parcel_pbl ]
+  standard_name = enter_standard_name_21
+  units = enter_units
+  type = logical
+  dimensions = ()
+  intent = in
+[ zmconv_tau ]
+  standard_name = enter_standard_name_22
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ errmsg ]
+  standard_name = enter_standard_name_23
+  units = enter_units
+  type = character | kind = len=512
+  dimensions = ()
+  intent = out
+[ errflg ]
+  standard_name = enter_standard_name_24
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = out
+
+[ccpp-arg-table]
+  name  = zm_convr_run
+  type  = scheme
+[ ncol ]
+  standard_name = enter_standard_name_25
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = in
+[ pcols ]
+  standard_name = enter_standard_name_26
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = in
+[ pver ]
+  standard_name = enter_standard_name_27
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = in
+[ pverp ]
+  standard_name = enter_standard_name_28
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = in
+[ gravit ]
+  standard_name = enter_standard_name_29
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ latice ]
+  standard_name = enter_standard_name_30
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ cpwv ]
+  standard_name = enter_standard_name_31
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ cpliq ]
+  standard_name = enter_standard_name_32
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ rh2o ]
+  standard_name = enter_standard_name_33
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ t ]
+  standard_name = enter_standard_name_34
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_79:enter_standard_name_80,enter_standard_name_81:enter_standard_name_82)
+  intent = in
+[ qh ]
+  standard_name = enter_standard_name_35
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_83:enter_standard_name_84,enter_standard_name_85:enter_standard_name_86)
+  intent = in
+[ prec ]
+  standard_name = enter_standard_name_66
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_87:enter_standard_name_88)
+  intent = out
+[ jctop ]
+  standard_name = enter_standard_name_64
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_89:enter_standard_name_90)
+  intent = out
+[ jcbot ]
+  standard_name = enter_standard_name_65
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_91:enter_standard_name_92)
+  intent = out
+[ pblh ]
+  standard_name = enter_standard_name_42
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_93:enter_standard_name_94)
+  intent = in
+[ zm ]
+  standard_name = enter_standard_name_39
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_95:enter_standard_name_96,enter_standard_name_97:enter_standard_name_98)
+  intent = in
+[ geos ]
+  standard_name = enter_standard_name_40
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_99:enter_standard_name_100)
+  intent = in
+[ zi ]
+  standard_name = enter_standard_name_41
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_101:enter_standard_name_102,enter_standard_name_103:enter_standard_name_104)
+  intent = in
+[ qtnd ]
+  standard_name = enter_standard_name_45
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_105:enter_standard_name_106,enter_standard_name_107:enter_standard_name_108)
+  intent = out
+[ heat ]
+  standard_name = enter_standard_name_46
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_109:enter_standard_name_110,enter_standard_name_111:enter_standard_name_112)
+  intent = out
+[ pap ]
+  standard_name = enter_standard_name_36
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_113:enter_standard_name_114,enter_standard_name_115:enter_standard_name_116)
+  intent = in
+[ paph ]
+  standard_name = enter_standard_name_37
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_117:enter_standard_name_118,enter_standard_name_119:enter_standard_name_120)
+  intent = in
+[ dpp ]
+  standard_name = enter_standard_name_38
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_121:enter_standard_name_122,enter_standard_name_123:enter_standard_name_124)
+  intent = in
+[ delt ]
+  standard_name = enter_standard_name_78
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = ()
+  intent = in
+[ mcon ]
+  standard_name = enter_standard_name_47
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_125:enter_standard_name_126,enter_standard_name_127:enter_standard_name_128)
+  intent = out
+[ cme ]
+  standard_name = enter_standard_name_50
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_129:enter_standard_name_130,enter_standard_name_131:enter_standard_name_132)
+  intent = out
+[ cape ]
+  standard_name = enter_standard_name_51
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_133:enter_standard_name_134)
+  intent = out
+[ tpert ]
+  standard_name = enter_standard_name_43
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_135:enter_standard_name_136)
+  intent = in
+[ dlf ]
+  standard_name = enter_standard_name_48
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_137:enter_standard_name_138,enter_standard_name_139:enter_standard_name_140)
+  intent = out
+[ pflx ]
+  standard_name = enter_standard_name_49
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_141:enter_standard_name_142,enter_standard_name_143:enter_standard_name_144)
+  intent = out
+[ zdu ]
+  standard_name = enter_standard_name_52
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_145:enter_standard_name_146,enter_standard_name_147:enter_standard_name_148)
+  intent = out
+[ rprd ]
+  standard_name = enter_standard_name_53
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_149:enter_standard_name_150,enter_standard_name_151:enter_standard_name_152)
+  intent = out
+[ mu ]
+  standard_name = enter_standard_name_57
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_153:enter_standard_name_154,enter_standard_name_155:enter_standard_name_156)
+  intent = out
+[ md ]
+  standard_name = enter_standard_name_60
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_157:enter_standard_name_158,enter_standard_name_159:enter_standard_name_160)
+  intent = out
+[ du ]
+  standard_name = enter_standard_name_59
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_161:enter_standard_name_162,enter_standard_name_163:enter_standard_name_164)
+  intent = out
+[ eu ]
+  standard_name = enter_standard_name_58
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_165:enter_standard_name_166,enter_standard_name_167:enter_standard_name_168)
+  intent = out
+[ ed ]
+  standard_name = enter_standard_name_61
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_169:enter_standard_name_170,enter_standard_name_171:enter_standard_name_172)
+  intent = out
+[ dp ]
+  standard_name = enter_standard_name_62
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_173:enter_standard_name_174,enter_standard_name_175:enter_standard_name_176)
+  intent = out
+[ dsubcld ]
+  standard_name = enter_standard_name_63
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_177:enter_standard_name_178)
+  intent = out
+[ jt ]
+  standard_name = enter_standard_name_75
+  units = enter_units
+  type = integer
+  dimensions = (enter_standard_name_26)
+  intent = inout
+[ maxg ]
+  standard_name = enter_standard_name_76
+  units = enter_units
+  type = integer
+  dimensions = (enter_standard_name_26)
+  intent = inout
+[ ideep ]
+  standard_name = enter_standard_name_69
+  units = enter_units
+  type = integer
+  dimensions = (enter_standard_name_179:enter_standard_name_180)
+  intent = out
+[ ql ]
+  standard_name = enter_standard_name_77
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_26,enter_standard_name_27)
+  intent = inout
+[ rliq ]
+  standard_name = enter_standard_name_67
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_181:enter_standard_name_182)
+  intent = out
+[ landfrac ]
+  standard_name = enter_standard_name_44
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_183:enter_standard_name_184)
+  intent = in
+[ org ]
+  standard_name = enter_standard_name_72
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_185:enter_standard_name_186,enter_standard_name_187:enter_standard_name_188)
+  intent = inout
+[ orgt ]
+  standard_name = enter_standard_name_73
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_189:enter_standard_name_190,enter_standard_name_191:enter_standard_name_192)
+  intent = inout
+[ org2d ]
+  standard_name = enter_standard_name_74
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_193:enter_standard_name_194,enter_standard_name_195:enter_standard_name_196)
+  intent = inout
+[ dif ]
+  standard_name = enter_standard_name_54
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_197:enter_standard_name_198,enter_standard_name_199:enter_standard_name_200)
+  intent = out
+[ dnlf ]
+  standard_name = enter_standard_name_55
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_201:enter_standard_name_202,enter_standard_name_203:enter_standard_name_204)
+  intent = out
+[ dnif ]
+  standard_name = enter_standard_name_56
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_205:enter_standard_name_206,enter_standard_name_207:enter_standard_name_208)
+  intent = out
+[ rice ]
+  standard_name = enter_standard_name_68
+  units = enter_units
+  type = real | kind = kind_phys
+  dimensions = (enter_standard_name_209:enter_standard_name_210)
+  intent = out
+[ errmsg ]
+  standard_name = enter_standard_name_70
+  units = enter_units
+  type = character | kind = len=512
+  dimensions = ()
+  intent = out
+[ errflg ]
+  standard_name = enter_standard_name_71
+  units = enter_units
+  type = integer
+  dimensions = ()
+  intent = out

@@ -19,7 +19,7 @@ contains
 !> \section arg_table_zm_conv_convtran_run Argument Table
 !! \htmlinclude zm_conv_convtran_run.html
 !!
-subroutine zm_conv_convtran_run(lchnk   , pcols, pver, &
+subroutine zm_conv_convtran_run(pcols, pver, &
                     doconvtran,q       ,ncnst   ,mu      ,md      , &
                     du      ,eu      ,ed      ,dp      ,dsubcld , &
                     jt      ,mx      ,ideep   ,il1g    ,il2g    , &
@@ -45,7 +45,6 @@ subroutine zm_conv_convtran_run(lchnk   , pcols, pver, &
 !
 ! Input arguments
 !
-   integer, intent(in) :: lchnk          ! chunk identifier
    integer, intent(in) :: pcols
    integer, intent(in) :: pver
    integer, intent(in) :: ncnst          ! number of tracers to transport

@@ -16,7 +16,7 @@ contains
 !> \section arg_table_zm_conv_momtran_run Argument Table
 !! \htmlinclude zm_conv_momtran_run.html
 !!
-subroutine zm_conv_momtran_run(lchnk, ncol, pcols, pver, pverp, &
+subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
                     domomtran,q       ,ncnst   ,mu      ,md    , &
                     du      ,eu      ,ed      ,dp      ,dsubcld , &
                     jt      ,mx      ,ideep   ,il1g    ,il2g    , &
@@ -42,7 +42,6 @@ subroutine zm_conv_momtran_run(lchnk, ncol, pcols, pver, pverp, &
 !
 ! Input arguments
 !
-   integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: ncnst                 ! number of tracers to transport
    integer, intent(in) :: pcols, pver, pverp

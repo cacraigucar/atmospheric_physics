@@ -23,7 +23,7 @@ contains
 !> \section arg_table_zm_conv_evap_run Argument Table
 !! \htmlinclude zm_conv_evap_run.html
 !!
-subroutine zm_conv_evap_run(ncol,lchnk, pcols, pver, pverp, &
+subroutine zm_conv_evap_run(ncol, pcols, pver, pverp, &
      gravit, latice, latvap, tmelt, &
      t,pmid,pdel,q, &
      landfrac, &
@@ -45,7 +45,7 @@ subroutine zm_conv_evap_run(ncol,lchnk, pcols, pver, pverp, &
     use wv_saturation,  only: qsat
 
 !------------------------------Arguments--------------------------------
-    integer,intent(in) :: ncol, lchnk             ! number of columns and chunk index
+    integer,intent(in) :: ncol                               ! number of columns
     integer,intent(in) :: pcols, pver, pverp
     real(kind_phys),intent(in) :: gravit                     ! gravitational acceleration (m s-2)
     real(kind_phys),intent(in) :: latice                     ! Latent heat of fusion (J kg-1)

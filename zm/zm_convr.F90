@@ -3,7 +3,11 @@ module zm_convr_mod
   use ccpp_kinds, only:  kind_phys
 !  use spmd_utils,      only: masterproc
 !  use cam_logfile,     only: iulog
+
+#ifdef OLD_CAM
   use zm_microphysics, only: zm_mphy, zm_aero_t, zm_conv_t
+#endif
+
   use zm_conv_common,  only: rl, cpres, capelmt, c0_lnd, c0_ocn, num_cin, zm_org, tau, tfreez, eps1, zmconv_microp, no_deep_pbl
   use zm_conv_common,  only: ke, ke_lnd, momcu, momcd
   use zm_conv_common,  only: rgrav, rgas, grav, cp, limcnv, lparcel_pbl, tiedke_add, dmpdz_param
@@ -49,7 +53,7 @@ subroutine zm_convr_init(cpair, epsilo, gravit, latvap, tmelt, rair, &
    real(kind_phys),intent(in)           :: zmconv_ke_lnd
    real(kind_phys),intent(in)           :: zmconv_momcu
    real(kind_phys),intent(in)           :: zmconv_momcd
-   logical                       :: zmconv_org
+   logical, intent(in)           :: zmconv_org
    logical, intent(in)           :: zmconv_microp_in
    logical, intent(in)           :: no_deep_pbl_in  ! no_deep_pbl = .true. eliminates ZM convection entirely within PBL
    real(kind_phys),intent(in)           :: zmconv_tiedke_add
@@ -115,7 +119,7 @@ end subroutine zm_convr_init
 !> \section arg_table_zm_convr_run Argument Table
 !! \htmlinclude zm_convr_run.html
 !!
-subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
+subroutine zm_convr_run(     ncol    ,pcols   ,pver    , &
                     pverp,   gravit  ,latice  ,cpwv    ,cpliq   , &
                     rh2o                                        , &
                     t       ,qh      ,prec    ,jctop   ,jcbot   , &
@@ -127,8 +131,13 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
                     dp      ,dsubcld ,jt      ,maxg    ,ideep   , &
                     ql      ,rliq    ,landfrac,                   &
                     org     ,orgt    ,org2d   ,  &
+#ifdef OLD_CAM
                     dif     ,dnlf    ,dnif    ,conv    , &
                     aero    , rice   ,errmsg  ,errflg)
+#else
+                    dif     ,dnlf    ,dnif    , &
+                    rice   ,errmsg  ,errflg)
+#endif
 !-----------------------------------------------------------------------
 !
 ! Purpose:
@@ -246,7 +255,6 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
 !
 ! input arguments
 !
-   integer, intent(in) :: lchnk                   ! chunk identifier
    integer, intent(in) :: ncol                    ! number of atmospheric columns
    integer, intent(in) :: pcols, pver, pverp
 
@@ -268,8 +276,10 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
    real(kind_phys), intent(in) :: tpert(:)      !                                                     (pcols)
    real(kind_phys), intent(in) :: landfrac(:) ! RBN Landfrac                                          (pcols)
 
+#ifdef OLD_CAM
    type(zm_conv_t), intent(inout) :: conv
    type(zm_aero_t), intent(inout) :: aero         ! aerosol object. intent(inout) because the
+#endif
                                                   ! gathered arrays are set here
                                                   ! before passing object
                                                   ! to microphysics
@@ -307,11 +317,14 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
    character(len=512), intent(out)      :: errmsg
    integer, intent(out)                 :: errflg
 
+#ifdef OLD_CAM
    type(zm_conv_t) :: loc_conv
+#endif
 
-   real(kind_phys), pointer :: org(:,:)     ! Only used if zm_org is true
-   real(kind_phys), pointer :: orgt(:,:)   ! Only used if zm_org is true
-   real(kind_phys), pointer :: org2d(:,:)  ! Only used if zm_org is true
+!CACNOTE - Figure out whether these should all be intent(out) or (inout)
+   real(kind_phys), pointer, intent(inout) :: org(:,:)     ! Only used if zm_org is true
+   real(kind_phys), pointer, intent(inout) :: orgt(:,:)   ! Only used if zm_org is true
+   real(kind_phys), pointer, intent(inout) :: org2d(:,:)  ! Only used if zm_org is true
 
    ! Local variables
 
@@ -323,12 +336,18 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
    real(kind_phys) evpg(pcols,pver)   ! gathered evap rate of rain in downdraft
    real(kind_phys) orgavg(pcols)
    real(kind_phys) dptot(pcols)
+
    real(kind_phys) mumax(pcols)
-   integer jt(pcols)                          ! wg top  level index of deep cumulus convection.
-   integer maxg(pcols)                        ! wg gathered values of maxi.
+
+!CACNOTE - Figure out real intent for jt and maxg
+   integer, intent(inout) :: jt(pcols)                          ! wg top  level index of deep cumulus convection.
+   integer, intent(inout) :: maxg(pcols)                        ! wg gathered values of maxi.
+
    integer lengath
 !     diagnostic field used by chem/wetdep codes
-   real(kind_phys) ql(pcols,pver)                    ! wg grid slice of cloud liquid water.
+
+!CACNOTE - Figure out real intent for ql
+   real(kind_phys),intent(inout):: ql(pcols,pver)                    ! wg grid slice of cloud liquid water.
 !
    real(kind_phys) pblt(pcols)           ! i row of pbl top indices.
 
@@ -414,7 +433,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
    integer j0(pcols)                 ! wg detrainment initiation level index.
    integer jd(pcols)                 ! wg downdraft initiation level index.
 
-   real(kind_phys) delt                     ! length of model time-step in seconds.
+   real(kind_phys),intent(in):: delt                     ! length of model time-step in seconds.
 
    integer i
    integer ii
@@ -454,6 +473,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
    rliq(:ncol)   = 0._kind_phys
    rice(:ncol)   = 0._kind_phys
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
      allocate( &
         loc_conv%frz(pcols,pver), &
@@ -510,6 +530,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
         loc_conv%mudpcu(pcols,pver), &
         loc_conv%dcape(pcols) )
    end if
+#endif
 
 !
 ! initialize convective tendencies
@@ -539,6 +560,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       end do
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do k = 1,pver
          do i = 1,ncol
@@ -657,6 +679,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       loc_conv%mudpcu     = conv%mudpcu
 
    end if
+#endif
 
    do i = 1,ncol
       pflx(i,pverp) = 0
@@ -673,12 +696,14 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
 
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do i = 1,ncol
          conv%dcape(i) = 0._kind_phys
          loc_conv%dcape(i)     = 0._kind_phys
       end do
    end if
+#endif
 
   if (zm_org) then
 ! compute vertical average here
@@ -759,7 +784,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
 
       !  For cam3 physics package, call non-dilute
 
-      call buoyan(lchnk   ,ncol    , pcols  ,pver    , &
+      call buoyan(ncol    , pcols  ,pver    , &
                   q       ,t       ,p       ,z       ,pf       , &
                   tp      ,qstp    ,tl      ,rl      ,cape     , &
                   pblt    ,lcl     ,lel     ,lon     ,maxi     , &
@@ -770,7 +795,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       !  Evaluate Tparcel, qs(Tparcel), buoyancy and CAPE,
       !     lcl, lel, parcel launch level at index maxi()=hmax
 
-      call buoyan_dilute(lchnk     ,ncol    ,pcols   ,pver     , &
+      call buoyan_dilute(  ncol    ,pcols   ,pver     , &
                   cpliq   ,latice  ,cpwv    ,rh2o    ,&
                   q       ,t       ,p       ,z       ,pf       , &
                   tp      ,qstp    ,tl      ,rl      ,cape     , &
@@ -814,6 +839,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       end do
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
 
       if (aero%scheme == 'modal') then
@@ -850,6 +876,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       end if
 
    end if
+#endif
 
 !
    do i = 1,lengath
@@ -904,7 +931,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
 ! obtain cloud properties.
 !
 
-   call cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq  , &
+   call cldprp(pcols   ,pver    ,pverp   ,cpliq  , &
                latice  ,cpwv    ,rh2o    ,&
                qg      ,tg      ,ug      ,vg      ,pg      , &
                zg      ,sg      ,mu      ,eu      ,du      , &
@@ -915,13 +942,19 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
                maxg    ,j0      ,jd      ,rl      ,lengath , &
                rgas    ,grav    ,cpres   ,msg     , &
                pflxg   ,evpg    ,cug     ,rprdg   ,limcnv  ,landfracg , &
+#ifdef OLD_CAM
                qldeg   ,aero    ,loc_conv,qhat    )
+#else
+               qldeg    ,qhat    )
+#endif
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do i = 1,lengath
          capeg(i) = capeg(i)+ loc_conv%dcape(i)
       end do
    end if
+#endif
 
 !
 ! convert detrainment from units of "1/m" to "1/mb".
@@ -939,6 +972,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       end do
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do k = msg + 1,pver
          do i = 1,lengath
@@ -947,8 +981,9 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
          end do
       end do
    end if
+#endif
 
-   call closure(lchnk   ,pcols   ,pver    , &
+   call closure(pcols   ,pver    , &
                 qg      ,tg      ,pg      ,zg      ,sg      , &
                 tpg     ,qs      ,qu      ,su      ,mc      , &
                 du      ,mu      ,md      ,qd      ,sd      , &
@@ -985,6 +1020,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       end do
    end if
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do k=msg+1,pver
          do i=1,lengath
@@ -993,6 +1029,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
          end do
       end do
    end if
+#endif
 
    do k=msg+1,pver
       do i=1,lengath
@@ -1009,6 +1046,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
          pflxg(i,k+1)= pflxg(i,k+1)*mb(i)*100._kind_phys/grav
 
 
+#ifdef OLD_CAM
          if ( zmconv_microp .and. mb(i).eq.0._kind_phys) then
             qlg (i,k) = 0._kind_phys
             loc_conv%qliq (i,k) = 0._kind_phys
@@ -1058,23 +1096,30 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
             loc_conv%trspim(i,k) = 0._kind_phys
             loc_conv%trspin(i,k) = 0._kind_phys
          end if
+#endif
       end do
    end do
 !
 ! compute temperature and moisture changes due to convection.
 !
-   call q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  , &
+   call q1q2_pjr(pcols   ,pver    ,latice  , &
                  dqdt    ,dsdt    ,qg      ,qs      ,qu      , &
                  su      ,du      ,qhat    ,shat    ,dp      , &
                  mu      ,md      ,sd      ,qd      ,qldeg   , &
                  dsubcld ,jt      ,maxg    ,1       ,lengath , &
                  cpres   ,rl      ,msg     ,          &
+#ifdef OLD_CAM
                  dlg     ,evpg    ,cug     , &
                  loc_conv     )
+#else
+                  dlg     ,evpg    ,cug)
+#endif
+
 !
 ! gather back temperature and mixing ratio.
 !
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do k = msg + 1,pver
          do i = 1,lengath
@@ -1169,6 +1214,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
          end do
       end do
    end if
+#endif
 
    do k = msg + 1,pver
       do i = 1,lengath
@@ -1188,6 +1234,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
       end do
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
      do k = msg + 1,pver
        do i = 1,lengath
@@ -1289,19 +1336,21 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
        end do
      end do
    end if
+#endif
 
-!
    do i = 1,lengath
       jctop(ideep(i)) = jt(i)
       jcbot(ideep(i)) = maxg(i)
       pflx(ideep(i),pverp) = pflxg(i,pverp)
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do i = 1,lengath
          conv%dcape(ideep(i)) =  loc_conv%dcape(i)
       end do
    end if
+#endif
 
 ! Compute precip by integrating change in water vapor minus detrained cloud water
    do k = pver,msg + 1,-1
@@ -1326,6 +1375,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
    rliq(:ncol) = rliq(:ncol) /1000._kind_phys
    rice(:ncol) = rice(:ncol) /1000._kind_phys
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
      deallocate( &
         loc_conv%frz, &
@@ -1382,6 +1432,7 @@ subroutine zm_convr_run(     lchnk   ,ncol    ,pcols   ,pver    , &
         loc_conv%mudpcu, &
         loc_conv%dcape )
    end if
+#endif
 
    return
 end subroutine zm_convr_run
@@ -1391,7 +1442,7 @@ end subroutine zm_convr_finalize
 
 !=========================================================================================
 
-subroutine buoyan(lchnk   ,ncol    ,pcols   ,pver    , &
+subroutine buoyan(ncol    ,pcols   ,pver    , &
                   q       ,t       ,p       ,z       ,pf      , &
                   tp      ,qstp    ,tl      ,rl      ,cape    , &
                   pblt    ,lcl     ,lel     ,lon     ,mx      , &
@@ -1417,7 +1468,6 @@ subroutine buoyan(lchnk   ,ncol    ,pcols   ,pver    , &
 !
 ! input arguments
 !
-   integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: pcols
    integer, intent(in) :: pver
@@ -1678,7 +1728,7 @@ subroutine buoyan(lchnk   ,ncol    ,pcols   ,pver    , &
    return
 end subroutine buoyan
 
-subroutine buoyan_dilute(  lchnk   ,ncol    ,pcols   ,pver    , &
+subroutine buoyan_dilute(  ncol    ,pcols   ,pver    , &
                   cpliq   ,latice  ,cpwv    ,rh2o    ,&
                   q       ,t       ,p       ,z       ,pf      , &
                   tp      ,qstp    ,tl      ,rl      ,cape    , &
@@ -1716,7 +1766,6 @@ subroutine buoyan_dilute(  lchnk   ,ncol    ,pcols   ,pver    , &
 !
 ! input arguments
 !
-   integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: pcols
    integer, intent(in) :: pver
@@ -1958,7 +2007,7 @@ end if ! Mixed parcel properties
 !!! DILUTE PLUME CALCULATION USING ENTRAINING PLUME !!!
 !!!   RBN 9/9/04   !!!
 
-   call parcel_dilute(lchnk, ncol, pcols, pver, cpliq, cpwv, rh2o, latice, msg, mx, p, t, q, &
+   call parcel_dilute(ncol, pcols, pver, cpliq, cpwv, rh2o, latice, msg, mx, p, t, q, &
    tpert, tp, tpv, qstp, pl, tl, ql, lcl, &
    org, landfrac, errmsg, errflg)
 
@@ -2041,7 +2090,7 @@ end if ! Mixed parcel properties
    return
 end subroutine buoyan_dilute
 
-subroutine parcel_dilute (lchnk, ncol, pcols, pver, cpliq, cpwv, rh2o, latice, msg, klaunch, p, t, q, &
+subroutine parcel_dilute (ncol, pcols, pver, cpliq, cpwv, rh2o, latice, msg, klaunch, p, t, q, &
   tpert, tp, tpv, qstp, pl, tl, ql, lcl, &
   org, landfrac,errmsg,errflg)
 
@@ -2053,7 +2102,6 @@ subroutine parcel_dilute (lchnk, ncol, pcols, pver, cpliq, cpwv, rh2o, latice, m
 implicit none
 !--------------------
 
-integer, intent(in) :: lchnk
 integer, intent(in) :: ncol
 integer, intent(in) :: pcols
 integer, intent(in) :: pver
@@ -2206,7 +2254,7 @@ do k = pver, msg+1, -1
          qtmix(i,k) = qtp0(i)
          tfguess = t(i,k)
          rcall = 1
-         call ientropy (rcall,i,lchnk,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
+         call ientropy (rcall,i,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
       end if
 
 ! Entraining levels
@@ -2251,7 +2299,7 @@ do k = pver, msg+1, -1
 
          tfguess = tmix(i,k+1)
          rcall = 2
-         call ientropy(rcall,i,lchnk,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
+         call ientropy(rcall,i,smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
 
 !
 ! Determine if this is lcl of this column if qsmix <= qtmix.
@@ -2270,7 +2318,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
             rcall = 3
-            call ientropy (rcall,i,lchnk,slcl,pl(i),qtlcl,tl(i),qslcl,tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
+            call ientropy (rcall,i,slcl,pl(i),qtlcl,tl(i),qslcl,tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
 
 !            write(iulog,*)' '
 !            write(iulog,*)' p',p(i,k+1),pl(i),p(i,lcl(i))
@@ -2370,7 +2418,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
             rcall =4
-            call ientropy (rcall,i,lchnk,new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
+            call ientropy (rcall,i,new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess,cpliq,cpwv,rh2o,errmsg,errflg)
 
          end do  ! Iteration loop for freezing processes.
 
@@ -2432,7 +2480,7 @@ end FUNCTION entropy
 
 !
 !-----------------------------------------------------------------------------------------
-SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg,cpliq,cpwv,rh2o,errmsg,errflg)
+SUBROUTINE ientropy (rcall,icol,s,p,qt,T,qst,Tfg,cpliq,cpwv,rh2o,errmsg,errflg)
 !-----------------------------------------------------------------------------------------
 !
 ! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg).
@@ -2442,7 +2490,7 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg,cpliq,cpwv,rh2o,errmsg,er
 
   use phys_grid, only: get_rlon_p, get_rlat_p
 
-  integer, intent(in) :: icol, lchnk, rcall
+  integer, intent(in) :: icol, rcall
   real(kind_phys), intent(in)  :: s, p, Tfg, qt
   real(kind_phys), intent(in) :: cpliq
   real(kind_phys), intent(in) :: cpwv
@@ -2536,12 +2584,13 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg,cpliq,cpwv,rh2o,errmsg,er
   call qsat_hPa(T, p, est, qst)
 
   if (.not. converged) then
-     this_lat = get_rlat_p(lchnk, icol)*57.296_kind_phys
-     this_lon = get_rlon_p(lchnk, icol)*57.296_kind_phys
-     write(errmsg,100) 'ZM_CONV: IENTROPY. Details: call#,lchnk,icol= ',rcall,lchnk,icol, &
-          ' lat: ',this_lat,' lon: ',this_lon, &
-          ' P(mb)= ', p, ' Tfg(K)= ', Tfg, ' qt(g/kg) = ', 1000._kind_phys*qt, &
-          ' qst(g/kg) = ', 1000._kind_phys*qst,', s(J/kg) = ',s
+!CACNOTE - Revisit this with Jesse
+!     this_lat = get_rlat_p(lchnk, icol)*57.296_kind_phys
+!     this_lon = get_rlon_p(lchnk, icol)*57.296_kind_phys
+!     write(errmsg,100) 'ZM_CONV: IENTROPY. Details: call#,lchnk,icol= ',rcall,lchnk,icol, &
+!          ' lat: ',this_lat,' lon: ',this_lon, &
+!          ' P(mb)= ', p, ' Tfg(K)= ', Tfg, ' qt(g/kg) = ', 1000._kind_phys*qt, &
+!          ' qst(g/kg) = ', 1000._kind_phys*qst,', s(J/kg) = ',s
      errflg=1
   end if
 
@@ -2549,7 +2598,7 @@ SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg,cpliq,cpwv,rh2o,errmsg,er
 
 end SUBROUTINE ientropy
 
-subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
+subroutine cldprp(pcols   ,pver    ,pverp   ,cpliq   , &
                   latice  ,cpwv    ,rh2o    ,&
                   q       ,t       ,u       ,v       ,p       , &
                   z       ,s       ,mu      ,eu      ,du      , &
@@ -2560,7 +2609,11 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
                   mx      ,j0      ,jd      ,rl      ,il2g    , &
                   rd      ,grav    ,cp      ,msg     , &
                   pflx    ,evp     ,cu      ,rprd    ,limcnv  ,landfrac, &
+#ifdef OLD_CAM
                   qcde    ,aero    ,loc_conv,qhat  )
+#else
+                  qcde     ,qhat  )
+#endif
 
 !-----------------------------------------------------------------------
 !
@@ -2589,7 +2642,6 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
 !
 ! Input arguments
 !
-   integer, intent(in) :: lchnk                  ! chunk identifier
    integer, intent(in) :: pcols
    integer, intent(in) :: pver
    integer, intent(in) :: pverp
@@ -2623,7 +2675,10 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
    real(kind_phys), intent(in) :: rl                    ! latent heat of vap
    real(kind_phys), intent(in) :: shat(pcols,pver)      ! interface values of dry stat energy
    real(kind_phys), intent(in) :: qhat(pcols,pver)      ! wg grid slice of upper interface mixing ratio.
+
+#ifdef OLD_CAM
    type(zm_aero_t), intent(in) :: aero           ! aerosol object
+#endif
 
 !
 ! output
@@ -2646,7 +2701,9 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
    real(kind_phys), intent(out) :: su(pcols,pver)       ! normalized dry stat energy of updraft
    real(kind_phys), intent(out) :: qcde(pcols,pver)     ! cloud water mixing ratio for detrainment (kg/kg)
 
+#ifdef OLD_CAM
    type(zm_conv_t) :: loc_conv
+#endif
 
    real(kind_phys) rd                   ! gas constant for dry air
    real(kind_phys) grav                 ! gravity
@@ -2723,6 +2780,8 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
 !
 !------------------------------------------------------------------------------
 !
+
+#ifdef OLD_CAM
    if (zmconv_microp) then
       loc_conv%autolm(:il2g,:) = 0._kind_phys
       loc_conv%accrlm(:il2g,:) = 0._kind_phys
@@ -2762,6 +2821,7 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
       loc_conv%dcape (:il2g)   = 0._kind_phys
 
    end if
+#endif
 
    do i = 1,il2g
       ftemp(i) = 0._kind_phys
@@ -2828,6 +2888,8 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
 
       end do
    end do
+
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do k = 1,pver
          do i = 1,il2g
@@ -2850,6 +2912,8 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
          end do
       end do
    end if
+#endif
+
 !
 !jr Set to zero things which make this routine blow up
 !
@@ -3025,14 +3089,18 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
       end do
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       itnum = 2
    else
       itnum = 1
    end if
+#endif
 
    do iter=1, itnum
 
+
+#ifdef OLD_CAM
       if (zmconv_microp) then
          do k = pver,msg + 1,-1
            do i = 1,il2g
@@ -3049,6 +3117,7 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
          end do
 
       end if
+#endif
 
 !
 ! specify the updraft mass flux mu, entrainment eu, detrainment du
@@ -3060,11 +3129,16 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
             mu(i,jb(i)) = 1._kind_phys
             eu(i,jb(i)) = mu(i,jb(i))/dz(i,jb(i))
          end if
+
+#ifdef OLD_CAM
          if (zmconv_microp) then
            tmplel(i) = lel(i)
          else
+#endif
            tmplel(i) = jt(i)
+#ifdef OLD_CAM
          end if
+#endif
       end do
       do k = pver,msg + 1,-1
          do i = 1,il2g
@@ -3093,13 +3167,17 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
                   eu(i,k) = 0._kind_phys
                   du(i,k) = mu(i,k+1)/dz(i,k)
                else
+#ifdef OLD_CAM
                   if (zmconv_microp) then
                      hu(i,k) = (mu(i,k+1)*hu(i,k+1) + dz(i,k)*(eu(i,k)*hmn(i,k) +   &
                                   latice*frz(i,k)))/(mu(i,k)+ dz(i,k)*du(i,k))
                   else
+#endif
                      hu(i,k) = mu(i,k+1)/mu(i,k)*hu(i,k+1) + &
                                dz(i,k)/mu(i,k)* (eu(i,k)*hmn(i,k)- du(i,k)*hsat(i,k))
+#ifdef OLD_CAM
                   end if
+#endif
                end if
             end if
          end do
@@ -3191,24 +3269,32 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
       end do
 
 ! compute condensation in updraft
+#ifdef OLD_CAM
       if (zmconv_microp) then
          tmplel(:il2g) = jlcl(:il2g)+1
       else
+#endif
          tmplel(:il2g) = jb(:il2g)
+#ifdef OLD_CAM
       end if
+#endif
 
       do k = pver,msg + 2,-1
          do i = 1,il2g
              if (k >= jt(i) .and. k < tmplel(i) .and. eps0(i) > 0._kind_phys) then
+#ifdef OLD_CAM
                if (zmconv_microp) then
                   cu(i,k) = ((mu(i,k)*su(i,k)-mu(i,k+1)*su(i,k+1))/ &
                          dz(i,k)- eu(i,k)*s(i,k)+du(i,k)*su(i,k))/(rl/cp)  &
                           - latice*frz(i,k)/rl
                else
+#endif
 
                   cu(i,k) = ((mu(i,k)*su(i,k)-mu(i,k+1)*su(i,k+1))/ &
                          dz(i,k)- (eu(i,k)-du(i,k))*s(i,k))/(rl/cp)
+#ifdef OLD_CAM
                end if
+#endif
                if (k == jt(i)) cu(i,k) = 0._kind_phys
                cu(i,k) = max(0._kind_phys,cu(i,k))
             end if
@@ -3216,6 +3302,7 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
       end do
 
 
+#ifdef OLD_CAM
       if (zmconv_microp) then
 
          tug(:il2g,:) = t(:il2g,:)
@@ -3305,6 +3392,8 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
          end do
 
       else  ! no convective microphysics
+#endif
+
 
 ! compute condensed liquid, rain production rate
 ! accumulate total precipitation (condensation - detrainment of liquid)
@@ -3329,18 +3418,22 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
                   rprd(i,k) = c0mask(i)*mu(i,k)*ql(i,k)
                   qcde(i,k) = ql(i,k)
 
+#ifdef OLD_CAM
                   if (zmconv_microp) then
                      loc_conv%qide(i,k) = 0._kind_phys
                      loc_conv%qncde(i,k) = 0._kind_phys
                      loc_conv%qnide(i,k) = 0._kind_phys
                      loc_conv%sprd(i,k) = 0._kind_phys
                   end if
+#endif
 
                end if
             end do
          end do
 !
+#ifdef OLD_CAM
       end if  ! zmconv_microp
+#endif
 
    end do   !iter
 !
@@ -3414,9 +3507,11 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
             evp(i,k) = -ed(i,k)*q(i,k) + (md(i,k)*qd(i,k)-md(i,k+1)*qd(i,k+1))/dz(i,k)
             evp(i,k) = max(evp(i,k),0._kind_phys)
             mdt = min(md(i,k+1),-small)
+#ifdef OLD_CAM
             if (zmconv_microp) then
               evp(i,k) = min(evp(i,k),rprd(i,k))
             end if
+#endif
             sd(i,k+1) = ((rl/cp*evp(i,k)-ed(i,k)*s(i,k))*dz(i,k) + md(i,k)*sd(i,k))/mdt
             totevp(i) = totevp(i) - dz(i,k)*ed(i,k)*q(i,k)
          end if
@@ -3478,7 +3573,7 @@ subroutine cldprp(lchnk   ,pcols   ,pver    ,pverp   ,cpliq   , &
    return
 end subroutine cldprp
 
-subroutine closure(lchnk   ,pcols   ,pver, &
+subroutine closure(pcols   ,pver, &
                    q       ,t       ,p       ,z       ,s       , &
                    tp      ,qs      ,qu      ,su      ,mc      , &
                    du      ,mu      ,md      ,qd      ,sd      , &
@@ -3509,7 +3604,6 @@ subroutine closure(lchnk   ,pcols   ,pver, &
 !
 !-----------------------------Arguments---------------------------------
 !
-   integer, intent(in) :: lchnk                 ! chunk identifier
    integer, intent(in) :: pcols
    integer, intent(in) :: pver
 
@@ -3692,14 +3786,18 @@ subroutine closure(lchnk   ,pcols   ,pver, &
    return
 end subroutine closure
 
-subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
+subroutine q1q2_pjr(pcols   ,pver    ,latice  ,&
                     dqdt    ,dsdt    ,q       ,qs      ,qu      , &
                     su      ,du      ,qhat    ,shat    ,dp      , &
                     mu      ,md      ,sd      ,qd      ,ql      , &
                     dsubcld ,jt      ,mx      ,il1g    ,il2g    , &
                     cp      ,rl      ,msg     ,          &
+#ifdef CAM
                     dl      ,evp     ,cu      ,          &
                     loc_conv)
+#else
+                    dl      ,evp     ,cu)
+#endif
 
 
    implicit none
@@ -3720,7 +3818,6 @@ subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
 
    real(kind_phys), intent(in) :: cp
 
-   integer, intent(in) :: lchnk             ! chunk identifier
    integer, intent(in) :: pcols
    integer, intent(in) :: pver
    real(kind_phys), intent(in) :: latice
@@ -3747,8 +3844,9 @@ subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
 
    real(kind_phys),intent(out) :: dqdt(pcols,pver),dsdt(pcols,pver)
    real(kind_phys),intent(out) :: dl(pcols,pver)
-
+#ifdef OLD_CAM
    type(zm_conv_t) :: loc_conv
+#endif
 
    integer kbm
    integer ktm
@@ -3771,6 +3869,7 @@ subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
       end do
    end do
 
+#ifdef OLD_CAM
    if (zmconv_microp) then
       do k = msg + 1,pver
          do i = il1g,il2g
@@ -3780,6 +3879,8 @@ subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
          end do
       end do
    end if
+#endif
+
 !
 ! find the highest level top and bottom levels of convection
 !
@@ -3802,7 +3903,9 @@ subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
                         -md(i,k)*   (sd(i,k)-shat(i,k)) &
                        )/dp(i,k)
 
+#ifdef OLD_CAM
          if (zmconv_microp) dsdt(i,k) = dsdt(i,k) + latice/cp*loc_conv%frz(i,k)
+#endif
 
          dqdt(i,k) = emc + &
                     (+mu(i,k+1)* (qu(i,k+1)-qhat(i,k+1)) &
@@ -3813,11 +3916,13 @@ subroutine q1q2_pjr(lchnk   ,pcols   ,pver    ,latice  ,&
 
          dl(i,k) = du(i,k)*ql(i,k+1)
 
+#ifdef OLD_CAM
          if (zmconv_microp) then
            loc_conv%di(i,k) = du(i,k)*loc_conv%qide(i,k+1)
            loc_conv%dnl(i,k)  = du(i,k)*loc_conv%qncde(i,k+1)
            loc_conv%dni(i,k)  = du(i,k)*loc_conv%qnide(i,k+1)
          end if
+#endif
 
       end do
    end do
