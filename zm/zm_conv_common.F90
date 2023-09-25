@@ -34,8 +34,6 @@ module zm_conv_common
    real(kind_phys) :: momcu
    real(kind_phys) :: momcd
 
-   logical :: zmconv_microp
-
    logical :: no_deep_pbl ! default = .false.
                           ! no_deep_pbl = .true. eliminates deep convection entirely within PBL
 

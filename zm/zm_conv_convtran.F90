@@ -2,7 +2,6 @@ module zm_conv_convtran_mod
 
   use ccpp_kinds, only:  kind_phys
 
-  use zm_conv_common,  only: zmconv_microp
   implicit none
 
   save
@@ -298,47 +297,6 @@ subroutine zm_conv_convtran_run(pcols, pver, &
                end if
             end do
          end do
-
-       if (zmconv_microp) then
-         do i = il1g,il2g
-           do k = jt(i),mx(i)
-             if (dcondt(i,k)*dt+const(i,k)<0._kind_phys) then
-                negadt = dcondt(i,k)+const(i,k)/dt
-                dcondt(i,k) = -const(i,k)/dt
-                do kk= k+1, mx(i)
-                  if (negadt<0._kind_phys .and. dcondt(i,kk)*dt+const(i,kk)>0._kind_phys ) then
-                    qtmp = dcondt(i,kk)+negadt*dptmp(i,k)/dptmp(i,kk)
-                    if (qtmp*dt+const(i,kk)>0._kind_phys) then
-                      dcondt(i,kk)= qtmp
-                      negadt=0._kind_phys
-                    else
-                      negadt= negadt+(const(i,kk)/dt+dcondt(i,kk))*dptmp(i,kk)/dptmp(i,k)
-                      dcondt(i,kk)= -const(i,kk)/dt
-                    end if
-
-                  end if
-                end do
-                do kk= k-1, jt(i), -1
-                  if (negadt<0._kind_phys .and. dcondt(i,kk)*dt+const(i,kk)>0._kind_phys ) then
-                    qtmp = dcondt(i,kk)+negadt*dptmp(i,k)/dptmp(i,kk)
-                    if (qtmp*dt+const(i,kk)>0._kind_phys) then
-                      dcondt(i,kk)= qtmp
-                      negadt=0._kind_phys
-                    else
-                      negadt= negadt+(const(i,kk)/dt+dcondt(i,kk))*dptmp(i,kk)/dptmp(i,k)
-                      dcondt(i,kk)= -const(i,kk)/dt
-                    end if
-                  end if
-                end do
-
-                if (negadt<0._kind_phys) then
-                   dcondt(i,k) = dcondt(i,k) + negadt
-                end if
-             end if
-           end do
-         end do
-       end if
-
 
 ! Initialize to zero everywhere, then scatter tendency back to full array
          dqdt(:,:,m) = 0._kind_phys
