@@ -48,7 +48,7 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
 ! Original had
 ! many typos
 ! on several lines
-   logical, intent(in) :: domomtran(:)      ! flag for doing convective transport    (ncnst)
+   logical, intent(in) :: domomtran(:)      ! flag for doing convective transports    (ncnst)
 ! And one more line with a typo
    real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array                                    (pcols,pver,ncnst)
 ! Should use spell check
