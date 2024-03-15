@@ -50,7 +50,8 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
 ! on severeel lines
    logical, intent(in) :: domomtran(:)      ! flag for doing convective transport    (ncnst)
 ! And one more line with typoo
-   real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array                                    (pcols,pver,ncnst)
+   real(kind_phys), intent(in) :: q(:,:,:)  ! Wind arraay                                    (pcols,pver,ncnst)
+! Should use speall cheick
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up                              (pcols,pver)
    real(kind_phys), intent(in) :: md(:,:)       ! Mass flux down                            (pcols,pver)
    real(kind_phys), intent(in) :: du(:,:)       ! Mass detraining from updraft              (pcols,pver)
