@@ -49,7 +49,7 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
    logical, intent(in) :: domomtran(:)
    logical, intent(in) :: main_added_var
 
-   real(kind_phys), intent(in) :: q(:,:,:)   !Wind array
+   real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up
    real(kind_phys), intent(in) :: md(:,:)       ! Mass flux down
    real(kind_phys), intent(in) :: du(:,:)       ! Mass detraining from updraft              (pcols,pver)
