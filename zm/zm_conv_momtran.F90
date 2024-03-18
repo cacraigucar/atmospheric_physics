@@ -50,7 +50,7 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
 ! on severall lines
    logical, intent(in) :: domomtran(:)      ! flag for doing convictive transports    (ncnst)
 ! And one more line with a tipo
-   real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array                                    (pcols,pver,ncnst)
+   real(kind_phys), intent(in) :: q(:,:,:)  ! WindEE array                                    (pcols,pver,ncnst)
 ! Should use speell check
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up                              (pcols,pver)
    real(kind_phys), intent(in) :: md(:,:)       ! Mass flux down                            (pcols,pver)
