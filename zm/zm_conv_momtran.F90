@@ -45,13 +45,11 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: ncnst                 ! number of tracers to transport
    integer, intent(in) :: pcols, pver, pverp
-! Originale had
-! many tipos
-! on severall lines
-   logical, intent(in) :: domomtran(:)      ! flag for doing convictive transports    (ncnst)
-! And one more line with a tipo
-   real(kind_phys), intent(in) :: q(:,:,:)  ! WindEE array                                    (pcols,pver,ncnst)
-! Should use speell check or type beetter
+! Original had a tipo
+   logical, intent(in) :: domomtran(:)
+   logical, intent(in) :: new_important_var
+
+   real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array                                    (pcols,pver,ncnst)
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up                              (pcols,pver)
    real(kind_phys), intent(in) :: md(:,:)       ! Mass flux down                            (pcols,pver)
    real(kind_phys), intent(in) :: du(:,:)       ! Mass detraining from updraft              (pcols,pver)
