@@ -45,13 +45,11 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: ncnst                 ! number of tracers to transport
    integer, intent(in) :: pcols, pver, pverp
-! Original had
-! many typos
-! on several lines
-   logical, intent(in) :: domomtran(:)      ! flag for doing convective transports
-! And one more line with a typo
-   real(kind_phys), intent(in) :: q(:,:,:)  ! Very important Wind array
-! Should use spell check
+! Original had a typo
+   logical, intent(in) :: domomtran(:)
+   logical, intent(in) :: main_added_var
+
+   real(kind_phys), intent(in) :: q(:,:,:)   !Wind array
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up
    real(kind_phys), intent(in) :: md(:,:)       ! Mass flux down
    real(kind_phys), intent(in) :: du(:,:)       ! Mass detraining from updraft              (pcols,pver)
