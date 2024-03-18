@@ -44,9 +44,10 @@ subroutine zm_conv_momtran_run(ncol, pcols, pver, pverp, &
 !
    integer, intent(in) :: ncol                  ! number of atmospheric columns
    integer, intent(in) :: ncnst                 ! number of tracers to transport
+   logical, intent(in) :: new_logical
    integer, intent(in) :: pcols, pver, pverp
 ! Original had a tipo
-   logical, intent(in) :: domomtran(:) ! commmennt
+   logical, intent(in) :: domomtran(:) ! revise comment
 
    real(kind_phys), intent(in) :: q(:,:,:)  ! Wind array
    real(kind_phys), intent(in) :: mu(:,:)       ! Mass flux up
