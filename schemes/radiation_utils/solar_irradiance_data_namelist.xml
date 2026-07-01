@@ -82,10 +82,13 @@
     <standard_name>filename_of_solar_irradiance_data</standard_name>
     <units>none</units>
     <desc>
-     The filename of the solar irradiance data.
+     The filename of the solar irradiance data. If the file
+     path is set to "NONE" then it is assumed that a
+     constant solar irradiance is being used.
     </desc>
     <values>
       <value>${DIN_LOC_ROOT}/atm/cam/solar/SolarForcingCMIP7piControl_c20250103.nc</value>
+      <value aquaplanet="1" phys_suite="cam4">NONE</value>
     </values>
   </entry>
   <entry id="solar_data_type">
@@ -112,6 +115,7 @@
     </desc>
     <values>
       <value>.true.</value>
+      <value phys_suite="cam4">.false.</value>
     </values>
   </entry>
   <entry id="solar_data_ymd">
@@ -152,6 +156,7 @@
     </desc>
     <values>
       <value>-9999D0</value>
+      <value aquaplanet="1" phys_suite="cam4">1365.0</value>
     </values>
   </entry>
 </entry_id_pg>

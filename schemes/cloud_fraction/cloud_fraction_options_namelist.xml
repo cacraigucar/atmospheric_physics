@@ -133,6 +133,7 @@
       <value>0.900D0</value>
       <value phys_suite="cam5">0.8975D0</value>
       <value phys_suite="cam7">0.8975D0</value>
+      <value dyn="se" phys_suite="cam4">0.910D0</value>
     </values>
   </entry>
   <entry id="cldfrc_rhminl_adj_land">
@@ -180,7 +181,7 @@
     <type>real</type>
     <category>cldfrc</category>
     <group>cldfrc_nl</group>
-    <standard_name>tunable_parameter_for_bottom_pressure_bound_for_mid_level_liquid_stratus_for_cloud_fraction</standard_name>
+    <standard_name>tunable_parameter_for_bottom_pressure_bound_for_mid_level_clouds_for_cloud_fraction</standard_name>
     <units>Pa</units>
     <desc>
       Bottom pressure bound for mid-level liquid stratus fraction.
